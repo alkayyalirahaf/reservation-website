@@ -129,4 +129,80 @@ class Reservation
 
         return []; // Success
     }
+
+
+        // 1. Get all reservations for admin (with search and filter)
+    public function getAll($search = null, $status = null)
+    {
+        $sql = "
+            SELECT r.*, u.name AS user_name, u.email AS user_email, 
+                   ts.slot_date, ts.start_time, ts.end_time
+            FROM reservations r
+            JOIN users u ON r.user_id = u.id
+            JOIN time_slots ts ON r.time_slot_id = ts.id
+            WHERE 1=1
+        ";
+        
+        $params = [];
+
+        // Search by user name or email
+        if ($search) {
+            $sql .= " AND (u.name LIKE ? OR u.email LIKE ?)";
+            $params[] = "%$search%";
+            $params[] = "%$search%";
+        }
+
+        // Filter by status
+        if ($status) {
+            $sql .= " AND r.status = ?";
+            $params[] = $status;
+        }
+
+        $sql .= " ORDER BY r.created_at DESC";
+
+        $stmt = $this->pdo->prepare($sql);
+        $stmt->execute($params);
+        return $stmt->fetchAll();
+    }
+
+    // 2. Update reservation status (Admin only)
+    public function updateStatus($reservationId, $newStatus)
+    {
+        // Validate status
+        $allowedStatuses = ['confirmed', 'rejected', 'cancelled'];
+        if (!in_array($newStatus, $allowedStatuses)) {
+            return ["Invalid status."];
+        }
+
+        // Fetch current status
+        $sql = "SELECT status FROM reservations WHERE id = ?";
+        $stmt = $this->pdo->prepare($sql);
+        $stmt->execute([$reservationId]);
+        $reservation = $stmt->fetch();
+
+        if (!$reservation) {
+            return ["Reservation not found."];
+        }
+
+        $currentStatus = $reservation['status'];
+
+        // Enforce transitions: pending -> confirmed/rejected/cancelled, confirmed -> cancelled
+        $validTransitions = [
+            'pending' => ['confirmed', 'rejected', 'cancelled'],
+            'confirmed' => ['cancelled'],
+            'rejected' => [], // Cannot change
+            'cancelled' => [] // Cannot change
+        ];
+
+        if (!in_array($newStatus, $validTransitions[$currentStatus])) {
+            return ["Cannot change status from '$currentStatus' to '$newStatus'."];
+        }
+
+        // Update
+        $sql = "UPDATE reservations SET status = ? WHERE id = ?";
+        $stmt = $this->pdo->prepare($sql);
+        $stmt->execute([$newStatus, $reservationId]);
+
+        return []; // Success
+    }
 }
