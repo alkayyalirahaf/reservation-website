@@ -79,4 +79,24 @@ class User
         $stmt = $this->pdo->query($sql);
         return $stmt->fetch()['total'];
     }
+
+        // Get all users (only role = 'user')
+    public function getAll()
+    {
+        $sql = "SELECT id, name, email, is_active, created_at FROM users WHERE role = 'user' ORDER BY created_at DESC";
+        $stmt = $this->pdo->query($sql);
+        return $stmt->fetchAll();
+    }
+
+    // Activate or deactivate a user account
+    public function setActive($userId, $isActive)
+    {
+        // Ensure it's a normal user (prevent deactivating admins)
+        $sql = "UPDATE users SET is_active = ? WHERE id = ? AND role = 'user'";
+        $stmt = $this->pdo->prepare($sql);
+        $stmt->execute([$isActive, $userId]);
+        
+        // Return true if a row was affected (meaning it was a valid user)
+        return $stmt->rowCount() > 0;
+    }
 }
