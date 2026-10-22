@@ -205,4 +205,32 @@ class Reservation
 
         return []; // Success
     }
+
+        // Get stats for the dashboard
+    public function getStats()
+    {
+        $stats = [
+            'total' => 0,
+            'pending' => 0,
+            'confirmed' => 0,
+            'rejected' => 0,
+            'cancelled' => 0
+        ];
+
+        // Get total count
+        $sql = "SELECT COUNT(*) AS total FROM reservations";
+        $stmt = $this->pdo->query($sql);
+        $stats['total'] = $stmt->fetch()['total'];
+
+        // Get count by status
+        $sql = "SELECT status, COUNT(*) AS count FROM reservations GROUP BY status";
+        $stmt = $this->pdo->query($sql);
+        $results = $stmt->fetchAll();
+
+        foreach ($results as $row) {
+            $stats[$row['status']] = $row['count'];
+        }
+
+        return $stats;
+    }
 }

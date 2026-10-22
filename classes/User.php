@@ -72,4 +72,11 @@ class User
         $stmt->execute([$id]);
         return $stmt->fetch();
     }
+        // Count total registered users (excluding admins)
+    public function countUsers()
+    {
+        $sql = "SELECT COUNT(*) AS total FROM users WHERE role = 'user'";
+        $stmt = $this->pdo->query($sql);
+        return $stmt->fetch()['total'];
+    }
 }
