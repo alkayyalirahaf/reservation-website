@@ -10,8 +10,8 @@ class User
         $this->pdo = $pdo;
     }
 
-    // Register a new user
-    public function register($name, $email, $password)
+     // Register a new user
+    public function register($name, $email, $password, $confirm_password)
     {
         $errors = [];
 
@@ -24,6 +24,10 @@ class User
         }
         if (strlen($password) < 6) {
             $errors[] = "Password must be at least 6 characters.";
+        }
+        // Check if passwords match
+        if ($password !== $confirm_password) {
+            $errors[] = "Passwords do not match.";
         }
 
         // Check if email already exists
