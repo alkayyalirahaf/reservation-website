@@ -76,4 +76,57 @@ class Reservation
             return ["Database error: Could not create reservation."];
         }
     }
+
+
+        // Get all reservations for a specific user
+    public function getByUser($userId)
+    {
+        $sql = "
+            SELECT r.*, ts.slot_date, ts.start_time, ts.end_time 
+            FROM reservations r
+            JOIN time_slots ts ON r.time_slot_id = ts.id
+            WHERE r.user_id = ?
+            ORDER BY ts.slot_date DESC, ts.start_time DESC
+        ";
+        $stmt = $this->pdo->prepare($sql);
+        $stmt->execute([$userId]);
+        return $stmt->fetchAll();
+    }
+
+    // Cancel a reservation (only owner, only pending/confirmed, only before slot starts)
+    public function cancel($reservationId, $userId)
+    {
+        // 1. Get reservation and slot details
+        $sql = "
+            SELECT r.*, ts.slot_date, ts.start_time 
+            FROM reservations r
+            JOIN time_slots ts ON r.time_slot_id = ts.id
+            WHERE r.id = ? AND r.user_id = ?
+        ";
+        $stmt = $this->pdo->prepare($sql);
+        $stmt->execute([$reservationId, $userId]);
+        $reservation = $stmt->fetch();
+
+        if (!$reservation) {
+            return ["Reservation not found or you do not have permission."];
+        }
+
+        // 2. Check if status allows cancellation
+        if (!in_array($reservation['status'], ['pending', 'confirmed'])) {
+            return ["Only pending or confirmed reservations can be cancelled."];
+        }
+
+        // 3. Check if slot is in the past
+        $slotDateTime = $reservation['slot_date'] . ' ' . $reservation['start_time'];
+        if (strtotime($slotDateTime) < time()) {
+            return ["You cannot cancel a reservation for a past time slot."];
+        }
+
+        // 4. Update status to 'cancelled'
+        $sql = "UPDATE reservations SET status = 'cancelled' WHERE id = ?";
+        $stmt = $this->pdo->prepare($sql);
+        $stmt->execute([$reservationId]);
+
+        return []; // Success
+    }
 }
