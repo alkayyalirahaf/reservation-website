@@ -1,30 +1,25 @@
 <?php
-// 1. Require config and classes
 require '../config.php';
 require '../classes/User.php';
 require '../classes/Auth.php';
 require '../classes/TimeSlot.php';
 require '../classes/Reservation.php';
 
-// 2. DB Connection & Instances
 $db = new Database();
 $pdo = $db->getConnection();
 $auth = new Auth($pdo);
 $timeSlotModel = new TimeSlot($pdo);
 $reservationModel = new Reservation($pdo);
 
-// 3. Session & Guard
 session_start();
 $auth->requireLogin();
 
-// 4. Get the Slot ID from URL
 $slotId = $_GET['id'] ?? null;
 if (!$slotId) {
     header("Location: slots.php");
     exit;
 }
 
-// Fetch the slot details
 $slot = $timeSlotModel->findById($slotId);
 if (!$slot) {
     $_SESSION['flash_error'] = "Time slot not found.";
@@ -34,63 +29,88 @@ if (!$slot) {
 
 $errors = [];
 
-// 5. Handle Form Submit
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $address = trim($_POST['address']);
     $note = trim($_POST['note']);
     
-    // Call the Reservation class (which checks capacity, duplicates, etc.)
     $errors = $reservationModel->create($_SESSION['user_id'], $slotId, $address, $note);
 
     if (empty($errors)) {
-        $_SESSION['flash_success'] = "Reservation created successfully! Waiting for admin approval.";
-        header("Location: my-reservations.php"); // We will create this page next
+        $_SESSION['flash_success'] = "Reservation requested for " . date('F j', strtotime($slot['slot_date'])) . ". Awaiting confirmation.";
+        header("Location: my-reservations.php");
         exit;
     }
 }
+
+$cssPath = '../assets/css/style.css';
+require '../includes/header.php';
 ?>
 
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Book Slot</title>
-</head>
-<body>
-    <h2>Book Cleaning Service</h2>
-    
-    <!-- Show errors if any -->
-    <?php if (!empty($errors)): ?>
-        <div style="color: red; border: 1px solid red; padding: 10px; margin-bottom: 20px;">
-            <?php foreach ($errors as $e): ?>
-                <p><?= htmlspecialchars($e) ?></p>
-            <?php endforeach; ?>
-        </div>
-    <?php endif; ?>
+<!-- Back Link -->
+<a href="slots.php" style="display: inline-block; margin-bottom: 20px; color: var(--primary-color); font-weight: 500;">
+    &lsaquo; Back to available slots
+</a>
 
-    <!-- Slot Summary -->
-    <div style="background: #f0f0f0; padding: 15px; margin-bottom: 20px; border-left: 5px solid #008080;">
-        <h3>Selected Slot:</h3>
-        <p><strong>Date:</strong> <?= htmlspecialchars($slot['slot_date']) ?></p>
-        <p><strong>Time:</strong> <?= htmlspecialchars($slot['start_time']) ?> - <?= htmlspecialchars($slot['end_time']) ?></p>
+<div style="margin-bottom: 40px;">
+    <h1>Book a reservation</h1>
+    <p class="text-muted">Add your cleaning address and review your selected time.</p>
+</div>
+
+<!-- Show errors -->
+<?php if (!empty($errors)): ?>
+    <div class="alert alert-danger" style="max-width: 800px;">
+        ! <?= htmlspecialchars($errors[0]) ?>
+    </div>
+<?php endif; ?>
+
+<!-- Split Layout: Card on left, Form on right -->
+<div class="flex-responsive" style= "display: flex; gap: 40px; align-items: flex-start; max-width: 900px;">
+    
+    <!-- Selected Slot Card -->
+    <div style="border: 1px solid var(--border-color); border-radius: 8px; padding: 25px; width: 350px; background: #fff;">
+        <h3 style="margin-bottom: 20px;">Selected slot</h3>
+        
+        <div style="display: flex; margin-bottom: 15px;">
+            <span class="text-muted" style="width: 100px;">Date</span>
+            <span style="font-weight: 500;"><?= date('M j, Y', strtotime($slot['slot_date'])) ?></span>
+        </div>
+        <div style="display: flex; margin-bottom: 15px;">
+            <span class="text-muted" style="width: 100px;">Time</span>
+            <span style="font-weight: 500;"><?= date('H:i', strtotime($slot['start_time'])) ?>–<?= date('H:i', strtotime($slot['end_time'])) ?></span>
+        </div>
+        <div style="display: flex; margin-bottom: 25px;">
+            <span class="text-muted" style="width: 100px;">Duration</span>
+            <?php 
+                $start = new DateTime($slot['start_time']);
+                $end = new DateTime($slot['end_time']);
+                $diff = $start->diff($end);
+                $hours = $diff->h + ($diff->i / 60);
+            ?>
+            <span style="font-weight: 500;"><?= $hours ?> hours</span>
+        </div>
+        
+        <p class="text-muted" style="font-size: 0.85rem;">Your reservation will be marked Pending until it is confirmed.</p>
     </div>
 
     <!-- Booking Form -->
-    <form method="POST" action="">
-        <div>
-            <label>Service Address:</label><br>
-            <input type="text" name="address" required style="width: 300px; padding: 5px;">
-        </div>
-        <br>
-        <div>
-            <label>Optional Note:</label><br>
-            <textarea name="note" rows="4" style="width: 300px; padding: 5px;"></textarea>
-        </div>
-        <br>
-        <button type="submit" style="padding: 10px 20px; background: teal; color: white; border: none;">Confirm Reservation</button>
-    </form>
+    <div style="flex: 1;">
+        <form method="POST" action="">
+            <div class="form-group">
+                <label>Cleaning address</label>
+                <input type="text" name="address" class="form-control" required placeholder="e.g. 128 Maple Street, Apt 4B">
+                <small class="text-muted" style="display: block; margin-top: 5px;">Include your apartment number and postal code.</small>
+            </div>
+            
+            <div class="form-group">
+                <label>Note (optional)</label>
+                <textarea name="note" class="form-control" rows="4" placeholder="Any special instructions..."></textarea>
+            </div>
 
-    <br>
-    <a href="slots.php">Cancel and go back</a>
-</body>
-</html>
+            <p class="text-muted" style="margin-bottom: 20px; font-size: 0.9rem;">You can cancel an upcoming Pending or Confirmed reservation from My Reservations.</p>
+            
+            <button type="submit" class="btn btn-primary" style="padding: 12px 25px;">Confirm reservation</button>
+        </form>
+    </div>
+</div>
+
+<?php require '../includes/footer.php'; ?>

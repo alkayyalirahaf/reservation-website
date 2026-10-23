@@ -1,20 +1,16 @@
 <?php
-// 1. Require config and classes
 require '../config.php';
 require '../classes/User.php';
 require '../classes/Auth.php';
 
-// 2. DB Connection & Instances
 $db = new Database();
 $pdo = $db->getConnection();
 $auth = new Auth($pdo);
 $userModel = new User($pdo);
 
-// 3. Session & Guard
 session_start();
 $auth->requireAdmin(); 
 
-// 4. Handle Activate/Deactivate (POST)
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['user_id']) && isset($_POST['action'])) {
     $userId = $_POST['user_id'];
     $isActive = ($_POST['action'] === 'activate') ? 1 : 0;
@@ -22,107 +18,78 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['user_id']) && isset($
     if ($userModel->setActive($userId, $isActive)) {
         $_SESSION['flash_success'] = "User status updated successfully.";
     } else {
-        $_SESSION['flash_error'] = "Failed to update user. They might be an admin.";
+        $_SESSION['flash_error'] = "Failed to update user.";
     }
-
-    // PRG Pattern
     header("Location: users.php");
     exit;
 }
 
-// 5. Fetch all normal users
 $users = $userModel->getAll();
+$activeCount = count(array_filter($users, fn($u) => $u['is_active'] == 1));
+$inactiveCount = count($users) - $activeCount;
+
+$cssPath = '../assets/css/style.css';
+require '../includes/admin-header.php';
 ?>
 
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Manage Users - Admin</title>
-    <style>
-        /* Simple inline CSS for the admin pages */
-        body { font-family: Arial, sans-serif; margin: 20px; }
-        .nav { margin-bottom: 20px; background: #f4f4f4; padding: 10px; }
-        .nav a { margin-right: 15px; text-decoration: none; color: #333; font-weight: bold; }
-        .nav a:hover { color: teal; }
-        table { width: 100%; border-collapse: collapse; text-align: left; }
-        th, td { border: 1px solid #ddd; padding: 10px; }
-        th { background: #f4f4f4; }
-        .btn { padding: 5px 10px; color: white; border: none; cursor: pointer; text-decoration: none; border-radius: 4px;}
-        .btn-danger { background: #dc3545; }
-        .btn-success { background: #28a745; }
-        .alert-success { color: green; border: 1px solid green; padding: 10px; background: #e8f5e9; margin-bottom: 15px; }
-        .alert-error { color: red; border: 1px solid red; padding: 10px; background: #ffebee; margin-bottom: 15px; }
-    </style>
-</head>
-<body>
-    <!-- Navigation Menu -->
-    <div class="nav">
-        <a href="dashboard.php">Dashboard</a>
-        <a href="reservations.php">Manage Reservations</a>
-        <a href="users.php">Manage Users</a>
-        <a href="slots.php">Manage Time Slots</a>
-        <a href="../pages/logout.php" style="color: red; float: right;">Logout</a>
-    </div>
+<div style="margin-bottom: 30px;">
+    <h1>Manage users</h1>
+    <p class="text-muted">Manage who can access the reservation system.</p>
+</div>
 
-    <h2>Manage Users</h2>
+<?php if (isset($_SESSION['flash_success'])): ?>
+    <div class="alert alert-success" style="max-width: 800px;">✓ <?= htmlspecialchars($_SESSION['flash_success']) ?></div>
+    <?php unset($_SESSION['flash_success']); ?>
+<?php endif; ?>
+<?php if (isset($_SESSION['flash_error'])): ?>
+    <div class="alert alert-danger" style="max-width: 800px;">! <?= htmlspecialchars($_SESSION['flash_error']) ?></div>
+    <?php unset($_SESSION['flash_error']); ?>
+<?php endif; ?>
 
-    <!-- Flash Messages -->
-    <?php if (isset($_SESSION['flash_success'])): ?>
-        <div class="alert-success"><?= htmlspecialchars($_SESSION['flash_success']) ?></div>
-        <?php unset($_SESSION['flash_success']); ?>
-    <?php endif; ?>
-    <?php if (isset($_SESSION['flash_error'])): ?>
-        <div class="alert-error"><?= htmlspecialchars($_SESSION['flash_error']) ?></div>
-        <?php unset($_SESSION['flash_error']); ?>
-    <?php endif; ?>
+<h3 style="font-size: 1rem; margin-bottom: 15px;"><?= count($users) ?> registered users • <?= $activeCount ?> active, <?= $inactiveCount ?> inactive</h3>
 
-    <!-- Users Table -->
-    <table>
-        <thead>
-            <tr>
-                <th>ID</th>
-                <th>Name</th>
-                <th>Email</th>
-                <th>Status</th>
-                <th>Registered At</th>
-                <th>Actions</th>
-            </tr>
-        </thead>
-        <tbody>
-            <?php if (empty($users)): ?>
-                <tr><td colspan="6">No users found.</td></tr>
-            <?php else: ?>
+<?php if (empty($users)): ?>
+    <p class="text-muted">No users found.</p>
+<?php else: ?>
+    <div class="table-container"  style="border: 1px solid var(--border-color); border-radius: 8px; overflow: hidden;">
+        <table class="table" style="margin-top: 0;">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Email</th>
+                    <th>Status</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
                 <?php foreach ($users as $u): ?>
                     <tr>
-                        <td><?= $u['id'] ?></td>
-                        <td><?= htmlspecialchars($u['name']) ?></td>
+                        <td style="font-weight: 500;"><?= htmlspecialchars($u['name']) ?></td>
                         <td><?= htmlspecialchars($u['email']) ?></td>
                         <td>
                             <?php if ($u['is_active']): ?>
-                                <span style="color: green; font-weight: bold;">Active</span>
+                                <span class="badge badge-confirmed">Active</span>
                             <?php else: ?>
-                                <span style="color: red; font-weight: bold;">Inactive</span>
+                                <span class="badge badge-cancelled">Inactive</span>
                             <?php endif; ?>
                         </td>
-                        <td><?= htmlspecialchars($u['created_at']) ?></td>
                         <td>
-                            <!-- Activate / Deactivate Form -->
                             <form method="POST" style="margin: 0;">
                                 <input type="hidden" name="user_id" value="<?= $u['id'] ?>">
                                 <?php if ($u['is_active']): ?>
                                     <input type="hidden" name="action" value="deactivate">
-                                    <button type="submit" class="btn btn-danger" onclick="return confirm('Are you sure you want to deactivate this user?')">Deactivate</button>
+                                    <button type="submit" class="btn btn-outline" style="padding: 5px 15px; font-size: 0.85rem;" onclick="return confirm('Deactivate this user?')">Deactivate</button>
                                 <?php else: ?>
                                     <input type="hidden" name="action" value="activate">
-                                    <button type="submit" class="btn btn-success">Activate</button>
+                                    <button type="submit" class="btn btn-primary" style="padding: 5px 15px; font-size: 0.85rem;">Activate</button>
                                 <?php endif; ?>
                             </form>
                         </td>
                     </tr>
                 <?php endforeach; ?>
-            <?php endif; ?>
-        </tbody>
-    </table>
-</body>
-</html>
+            </tbody>
+        </table>
+    </div>
+<?php endif; ?>
+
+<?php require '../includes/footer.php'; ?>

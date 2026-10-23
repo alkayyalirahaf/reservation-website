@@ -11,6 +11,15 @@ $userModel = new User($pdo);
 // 3. Start session for flash messages
 session_start();
 
+
+
+// If already logged in, redirect to index
+if (isset($_SESSION['user_id'])) {
+    header("Location: ../index.php");
+    exit;
+}
+
+
 $errors = [];
 
 // 4. Handle POST request
@@ -30,51 +39,52 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         exit;
     }
 }
+
+$cssPath = '../assets/css/style.css';
+require '../includes/header.php';
 ?>
 
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Register - Cleaning Service</title>
-</head>
-<body>
-    <h2>Create an Account</h2>
 
-    <!-- Show errors if any -->
+<!-- Register Form (Centered) -->
+<div style="max-width: 400px; margin: 60px auto;">
+    <h1>Create your account</h1>
+    <p class="text-muted" style="margin-bottom: 30px;">Reserve a home cleaning in a few simple steps.</p>
+
+     <!-- Show errors -->
     <?php if (!empty($errors)): ?>
-        <div style="color: red;">
-            <?php foreach ($errors as $error): ?>
-                <p><?= htmlspecialchars($error) ?></p>
-            <?php endforeach; ?>
+        <div class="alert alert-danger">
+            ! <?= htmlspecialchars($errors[0]) ?>
         </div>
     <?php endif; ?>
 
-    <!-- Registration Form -->
     <form method="POST" action="">
-        <div>
-            <label>Full Name:</label><br>
-            <input type="text" name="name" required>
+        <div class="form-group">
+            <label>Full name</label>
+            <input type="text" name="name" class="form-control" required>
         </div>
-        <br>
-        <div>
-            <label>Email:</label><br>
-            <input type="email" name="email" required>
+
+
+        <div class="form-group">
+            <label>Email</label>
+            <input type="email" name="email" class="form-control" required>
         </div>
-        <br>
-        <div>
-            <label>Password:</label><br>
-            <input type="password" name="password" required>
+        <div class="form-group">
+            <label>Password</label>
+            <input type="password" name="password" class="form-control" required>
+            <small class="text-muted" style="display: block; margin-top: 5px;">Use at least 6 characters.</small>
         </div>
-        <br>
-        <div>
-            <label>Confirm Password:</label><br>
-            <input type="password" name="confirm_password" required>
+
+
+        <div class="form-group">
+            <label>Confirm password</label>
+            <input type="password" name="confirm_password" class="form-control" required>
         </div>
-        <br>
-        <button type="submit">Register</button>
+        <button type="submit" class="btn btn-primary btn-block" style="margin-top: 10px;">Create account</button>
     </form>
 
-    <p>Already have an account? <a href="login.php">Login here</a></p>
-</body>
-</html>
+     <p class="text-muted" style="text-align: center; margin-top: 20px;">
+        Already have an account? <a href="login.php" style="font-weight: 500;">Log in</a>
+    </p>
+</div>
+
+<?php require '../includes/footer.php'; ?>

@@ -1,21 +1,17 @@
 <?php
-// 1. Require config and classes
 require '../config.php';
 require '../classes/User.php';
 require '../classes/Auth.php';
 require '../classes/Reservation.php';
 
-// 2. DB Connection & Instances
 $db = new Database();
 $pdo = $db->getConnection();
 $auth = new Auth($pdo);
 $reservationModel = new Reservation($pdo);
 
-// 3. Session & Guard
 session_start();
 $auth->requireLogin();
 
-// 4. Handle Cancellation (POST request)
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['cancel_id'])) {
     $cancelId = $_POST['cancel_id'];
     $errors = $reservationModel->cancel($cancelId, $_SESSION['user_id']);
@@ -26,50 +22,49 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['cancel_id'])) {
         $_SESSION['flash_error'] = $errors[0];
     }
     
-    // PRG Pattern (Post/Redirect/Get) to prevent form resubmission
     header("Location: my-reservations.php");
     exit;
 }
 
-// 5. Fetch user's reservations
 $reservations = $reservationModel->getByUser($_SESSION['user_id']);
+$cssPath = '../assets/css/style.css';
+require '../includes/header.php';
 ?>
 
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>My Reservations</title>
-</head>
-<body>
-    <h2>My Reservations</h2>
+<div style="margin-bottom: 30px;">
+    <p class="text-muted"><?= htmlspecialchars($_SESSION['user_name']) ?> • <?= date('F j, Y') ?></p>
+    <h1>My reservations</h1>
+    <p class="text-muted">View your cleaning schedule and reservation status.</p>
+</div>
 
-    <!-- Flash Messages -->
-    <?php if (isset($_SESSION['flash_success'])): ?>
-        <p style="color: green; border: 1px solid green; padding: 10px; background: #e8f5e9;">
-            <?= htmlspecialchars($_SESSION['flash_success']) ?>
-        </p>
-        <?php unset($_SESSION['flash_success']); ?>
-    <?php endif; ?>
-    
-    <?php if (isset($_SESSION['flash_error'])): ?>
-        <p style="color: red; border: 1px solid red; padding: 10px; background: #ffebee;">
-            <?= htmlspecialchars($_SESSION['flash_error']) ?>
-        </p>
-        <?php unset($_SESSION['flash_error']); ?>
-    <?php endif; ?>
+<!-- Flash Messages -->
+<?php if (isset($_SESSION['flash_success'])): ?>
+    <div class="alert alert-success" style="max-width: 800px;">
+        ✓ <?= htmlspecialchars($_SESSION['flash_success']) ?>
+    </div>
+    <?php unset($_SESSION['flash_success']); ?>
+<?php endif; ?>
+<?php if (isset($_SESSION['flash_error'])): ?>
+    <div class="alert alert-danger" style="max-width: 800px;">
+        ! <?= htmlspecialchars($_SESSION['flash_error']) ?>
+    </div>
+    <?php unset($_SESSION['flash_error']); ?>
+<?php endif; ?>
 
-    <a href="slots.php" style="display:inline-block; margin-bottom: 20px; padding: 10px; background: teal; color: white; text-decoration: none;">+ Book a new slot</a>
+<div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 20px;">
+    <h3 style="font-size: 1rem; font-weight: 500;"><?= count($reservations) ?> reservations</h3>
+    <a href="slots.php" class="btn btn-primary" style="padding: 8px 15px; font-size: 0.9rem;">+ Book a new slot</a>
+</div>
 
-    <?php if (empty($reservations)): ?>
-        <p>You have no reservations yet.</p>
-    <?php else: ?>
-        <table border="1" cellpadding="10" cellspacing="0" style="width: 100%; text-align: left; border-collapse: collapse;">
+<?php if (empty($reservations)): ?>
+    <p class="text-muted">You have no reservations yet.</p>
+<?php else: ?>
+    <div style="border: 1px solid var(--border-color); border-radius: 8px; overflow: hidden;">
+        <table class="table" style="margin-top: 0;">
             <thead>
-                <tr style="background: #f0f0f0;">
+                <tr>
                     <th>Date</th>
                     <th>Time</th>
-                    <th>Address</th>
                     <th>Status</th>
                     <th>Action</th>
                 </tr>
@@ -77,27 +72,18 @@ $reservations = $reservationModel->getByUser($_SESSION['user_id']);
             <tbody>
                 <?php foreach ($reservations as $res): ?>
                     <tr>
-                        <td><?= htmlspecialchars($res['slot_date']) ?></td>
-                        <td><?= htmlspecialchars($res['start_time']) ?> - <?= htmlspecialchars($res['end_time']) ?></td>
-                        <td><?= htmlspecialchars($res['address']) ?></td>
                         <td>
-                            <!-- Status Badge with colors -->
-                            <?php 
-                                $statusColor = match($res['status']) {
-                                    'pending' => '#ffc107',
-                                    'confirmed' => '#28a745',
-                                    'rejected' => '#dc3545',
-                                    'cancelled' => '#6c757d',
-                                    default => '#000'
-                                };
-                            ?>
-                            <span style="color: white; background: <?= $statusColor ?>; padding: 3px 8px; border-radius: 4px; font-size: 0.9em;">
+                            <div style="font-weight: 500;"><?= date('M j, Y', strtotime($res['slot_date'])) ?></div>
+                            <div class="text-muted" style="font-size: 0.8rem;">R-<?= 1000 + $res['id'] ?></div>
+                        </td>
+                        <td><?= date('H:i', strtotime($res['start_time'])) ?>–<?= date('H:i', strtotime($res['end_time'])) ?></td>
+                        <td>
+                            <span class="badge badge-<?= $res['status'] ?>">
                                 <?= ucfirst(htmlspecialchars($res['status'])) ?>
                             </span>
                         </td>
                         <td>
                             <?php 
-                            // Show Cancel button only if status is pending or confirmed AND slot is in the future
                             $slotDateTime = $res['slot_date'] . ' ' . $res['start_time'];
                             $isFuture = strtotime($slotDateTime) > time();
                             
@@ -105,19 +91,19 @@ $reservations = $reservationModel->getByUser($_SESSION['user_id']);
                             ?>
                                 <form method="POST" action="" style="margin: 0;">
                                     <input type="hidden" name="cancel_id" value="<?= $res['id'] ?>">
-                                    <button type="submit" onclick="return confirm('Are you sure you want to cancel this reservation?');" style="padding: 5px 10px; cursor: pointer;">Cancel</button>
+                                    <button type="submit" class="btn btn-outline" style="padding: 5px 15px; font-size: 0.85rem;" onclick="return confirm('Are you sure you want to cancel this reservation?');">Cancel</button>
                                 </form>
+                            <?php elseif ($isFuture === false): ?>
+                                <span class="text-muted" style="font-size: 0.85rem;">Past reservation</span>
                             <?php else: ?>
-                                -
+                                <span class="text-muted" style="font-size: 0.85rem;">No action available</span>
                             <?php endif; ?>
                         </td>
                     </tr>
                 <?php endforeach; ?>
             </tbody>
         </table>
-    <?php endif; ?>
+    </div>
+<?php endif; ?>
 
-    <br>
-    <a href="../index.php">Back to Home</a>
-</body>
-</html>
+<?php require '../includes/footer.php'; ?>
