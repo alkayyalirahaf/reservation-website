@@ -31,7 +31,7 @@ class User
         }
 
         // Check if email already exists
-        if (empty($errors) && $this->findByEmail($email)) {
+        if (empty($errors) && $this->emailExists($email)) {
             $errors[] = "Email is already registered.";
         }
 
@@ -55,6 +55,18 @@ class User
         }
     }
 
+
+
+    // Check if an email already exists (returns boolean)
+    public function emailExists($email)
+    {
+        $sql = "SELECT id FROM users WHERE email = ?";
+        $stmt = $this->pdo->prepare($sql);
+        $stmt->execute([$email]);
+        return $stmt->rowCount() > 0;
+    }
+
+
     // Find a user by email (used for login)
     public function findByEmail($email)
     {
@@ -72,7 +84,9 @@ class User
         $stmt->execute([$id]);
         return $stmt->fetch();
     }
-        // Count total registered users (excluding admins)
+
+
+     // Count total registered users (excluding admins)
     public function countUsers()
     {
         $sql = "SELECT COUNT(*) AS total FROM users WHERE role = 'user'";
