@@ -100,4 +100,7 @@ class Auth
             die("403 Forbidden: You do not have permission to access this page.");
         }
     }
+
+
+    
 }
