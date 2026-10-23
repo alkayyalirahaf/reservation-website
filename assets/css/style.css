@@ -1,0 +1,377 @@
+/* Import Inter font from Google Fonts */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+/* --- Variables (Figma Colors) --- */
+:root {
+    --primary-color: #0F766E; /* Teal */
+    --primary-light: #CCFBF1;
+    --text-dark: #111827;
+    --text-gray: #6B7280;
+    --bg-gray: #F9FAFB;
+    --border-color: #E5E7EB;
+    --danger: #DC2626;
+    --danger-light: #FEE2E2;
+    --success: #16A34A;
+    --success-light: #DCFCE7;
+    --warning: #D97706;
+    --warning-light: #FEF3C7;
+}
+
+/* --- Reset & Base --- */
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    font-family: 'Inter', sans-serif;
+}
+
+body {
+    background-color: #FFFFFF;
+    color: var(--text-dark);
+    line-height: 1.5;
+    font-size: 15px;
+}
+
+a {
+    text-decoration: none;
+    color: var(--primary-color);
+}
+
+/* --- Layout --- */
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 20px;
+}
+
+/* --- Typography --- */
+h1, h2, h3 { font-weight: 600; color: var(--text-dark); }
+h1 { font-size: 2rem; margin-bottom: 10px; }
+h2 { font-size: 1.5rem; margin-bottom: 20px; }
+.text-muted { color: var(--text-gray); font-size: 0.9rem; }
+
+/* --- Navbar (User & Guest) --- */
+.navbar {
+    border-bottom: 1px solid var(--border-color);
+    padding: 15px 0;
+    background: #fff;
+}
+.navbar .container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+.navbar-brand {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--primary-color);
+}
+.navbar-links {
+    display: flex;
+    gap: 25px;
+    align-items: center;
+}
+.navbar-links a {
+    color: var(--text-gray);
+    font-weight: 500;
+}
+.navbar-links a.active, .navbar-links a:hover {
+    color: var(--primary-color);
+}
+
+/* --- Forms & Inputs --- */
+.form-group {
+    margin-bottom: 20px;
+}
+.form-group label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 500;
+    color: var(--text-dark);
+}
+.form-control {
+    width: 100%;
+    padding: 10px 15px;
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    font-size: 15px;
+    outline: none;
+}
+.form-control:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px var(--primary-light);
+}
+
+/* --- Buttons --- */
+.btn {
+    display: inline-block;
+    padding: 10px 20px;
+    border-radius: 6px;
+    border: 1px solid transparent;
+    font-weight: 500;
+    cursor: pointer;
+    text-align: center;
+    font-size: 15px;
+}
+.btn-primary {
+    background-color: var(--primary-color);
+    color: white;
+}
+.btn-primary:hover { background-color: #0d655e; }
+.btn-outline {
+    background-color: white;
+    border-color: var(--border-color);
+    color: var(--text-dark);
+}
+.btn-outline:hover { background-color: var(--bg-gray); }
+.btn-danger { background-color: var(--danger); color: white; }
+.btn-block { width: 100%; display: block; }
+
+/* --- Alerts (Flash Messages) --- */
+.alert {
+    padding: 15px;
+    border-radius: 6px;
+    margin-bottom: 20px;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+.alert-success {
+    background-color: var(--success-light);
+    color: var(--success);
+    border: 1px solid #86EFAC;
+}
+.alert-danger {
+    background-color: var(--danger-light);
+    color: var(--danger);
+    border: 1px solid #FCA5A5;
+}
+
+/* --- Badges --- */
+.badge {
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    font-weight: 500;
+}
+.badge-pending { background: var(--warning-light); color: var(--warning); }
+.badge-confirmed { background: var(--success-light); color: var(--success); }
+.badge-rejected { background: var(--danger-light); color: var(--danger); }
+.badge-cancelled { background: #F3F4F6; color: var(--text-gray); }
+
+/* --- Tables --- */
+.table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 15px;
+}
+.table th, .table td {
+    padding: 15px;
+    text-align: left;
+    border-bottom: 1px solid var(--border-color);
+}
+.table th {
+    background-color: var(--bg-gray);
+    color: var(--text-gray);
+    font-weight: 500;
+}
+
+
+
+
+/* --- Admin Layout & Sidebar --- */
+.admin-layout {
+    display: flex;
+    min-height: 100vh;
+}
+
+/* Sidebar Styles */
+.sidebar {
+    width: 250px;
+    background: #fff;
+    border-right: 1px solid var(--border-color);
+    padding: 25px 20px;
+    display: flex;
+    flex-direction: column;
+    position: fixed;
+    top: 0;
+    bottom: 0;
+    left: 0;
+}
+
+.sidebar-brand {
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: var(--primary-color);
+    margin-bottom: 5px;
+}
+
+.sidebar-subtitle {
+    font-size: 0.75rem;
+    color: var(--text-gray);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 30px;
+}
+
+.sidebar-nav {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.sidebar-nav a {
+    padding: 10px 15px;
+    border-radius: 6px;
+    color: var(--text-gray);
+    font-weight: 500;
+    text-decoration: none;
+    transition: all 0.2s;
+}
+
+.sidebar-nav a:hover {
+    background: var(--bg-gray);
+    color: var(--text-dark);
+}
+
+.sidebar-nav a.active {
+    background: var(--primary-light);
+    color: var(--primary-color);
+    font-weight: 600;
+}
+
+.sidebar-footer {
+    margin-top: auto;
+    border-top: 1px solid var(--border-color);
+    padding-top: 20px;
+}
+
+.sidebar-user {
+    font-weight: 600;
+    margin-bottom: 10px;
+}
+
+.sidebar-footer a {
+    color: var(--text-gray);
+    text-decoration: none;
+    font-size: 0.9rem;
+}
+
+/* Main Content Area */
+.admin-main {
+    flex: 1;
+    margin-left: 250px; /* Leave space for sidebar */
+    padding: 40px;
+    background: #fff;
+}
+
+/* Topbar in Admin */
+.admin-topbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-bottom: 20px;
+    border-bottom: 1px solid var(--border-color);
+    margin-bottom: 40px;
+    color: var(--text-gray);
+    font-size: 0.9rem;
+}
+
+
+
+
+
+/* =========================================
+   Responsive Design (Tablets & Mobiles)
+   ========================================= */
+
+/* For Tablets (Screens smaller than 992px) */
+@media (max-width: 992px) {
+    /* Admin layout adjustments */
+    .admin-layout {
+        flex-direction: column;
+    }
+    
+    .sidebar {
+        width: 100%;
+        position: relative;
+        height: auto;
+        border-right: none;
+        border-bottom: 1px solid var(--border-color);
+        padding: 15px;
+    }
+    
+    .sidebar-nav {
+        flex-direction: row;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin-bottom: 15px;
+    }
+    
+    .sidebar-footer {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border-top: none;
+        padding-top: 0;
+    }
+    
+    .admin-main {
+        margin-left: 0;
+        padding: 20px;
+    }
+    
+    /* Dashboard stats grid */
+    .stats-grid {
+        grid-template-columns: repeat(2, 1fr) !important; /* Show 2 cards per row instead of 4 */
+    }
+
+    /* Dashboard Chart section */
+    .chart-section {
+        flex-direction: column;
+        align-items: flex-start !important;
+    }
+}
+
+/* For Mobiles (Screens smaller than 768px) */
+@media (max-width: 768px) {
+    /* Navbar (User) */
+    .navbar .container {
+        flex-direction: column;
+        gap: 15px;
+    }
+    
+    .navbar-links {
+        width: 100%;
+        justify-content: center;
+        flex-wrap: wrap;
+    }
+
+    /* Forms (Make them full width) */
+    .form-group, .form-control {
+        width: 100% !important;
+        max-width: 100% !important;
+    }
+    
+    /* Flex layouts inside pages (like the split view in Book page) */
+    .flex-responsive {
+        flex-direction: column !important;
+    }
+
+    /* Stats grid */
+    .stats-grid {
+        grid-template-columns: 1fr !important; /* 1 card per row */
+    }
+
+    /* Tables (Add horizontal scroll on small screens) */
+    .table-container {
+        overflow-x: auto;
+    }
+    
+    /* Admin forms (Like Add Slot) */
+    form[style*="display: flex"] {
+        flex-direction: column;
+        align-items: stretch !important;
+    }
+}

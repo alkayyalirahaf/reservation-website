@@ -37,49 +37,54 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         exit;
     }
 }
+
+
+// Set path for CSS (since we are in pages folder)
+$cssPath = '../assets/css/style.css';
+require '../includes/header.php';
 ?>
 
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Login - Cleaning Service</title>
-</head>
-<body>
-    <h2>Login to Your Account</h2>
+<!-- Login Form (Centered) -->
+<div style="max-width: 400px; margin: 60px auto;">
+    <h1>Welcome back</h1>
+    <p class="text-muted" style="margin-bottom: 30px;">Log in to book and manage your cleanings.</p>
 
     <!-- Show success message from register page -->
     <?php if (isset($_SESSION['flash_success'])): ?>
-        <div style="color: green;">
-            <p><?= htmlspecialchars($_SESSION['flash_success']) ?></p>
+        <div class="alert alert-success">
+            ✓ <?= htmlspecialchars($_SESSION['flash_success']) ?>
         </div>
-        <?php unset($_SESSION['flash_success']); // Clear message after showing ?>
+        <?php unset($_SESSION['flash_success']); ?>
     <?php endif; ?>
 
-    <!-- Show errors if any -->
+
+     <!-- Show errors -->
     <?php if (!empty($errors)): ?>
-        <div style="color: red;">
-            <?php foreach ($errors as $error): ?>
-                <p><?= htmlspecialchars($error) ?></p>
-            <?php endforeach; ?>
+        <div class="alert alert-danger">
+            ! <?= htmlspecialchars($errors[0]) ?>
         </div>
     <?php endif; ?>
 
-    <!-- Login Form -->
-    <form method="POST" action="">
-        <div>
-            <label>Email:</label><br>
-            <input type="email" name="email" required>
+
+
+       <form method="POST" action="">
+        <div class="form-group">
+            <label>Email</label>
+            <input type="email" name="email" class="form-control" required>
         </div>
-        <br>
-        <div>
-            <label>Password:</label><br>
-            <input type="password" name="password" required>
+        <div class="form-group">
+            <label>Password</label>
+            <input type="password" name="password" class="form-control" required>
         </div>
-        <br>
-        <button type="submit">Login</button>
+        <button type="submit" class="btn btn-primary btn-block" style="margin-top: 10px;">Log in</button>
     </form>
 
-    <p>Don't have an account? <a href="register.php">Register here</a></p>
-</body>
-</html>
+
+
+
+    <p class="text-muted" style="text-align: center; margin-top: 20px;">
+        New to Tidyhome? <a href="register.php" style="font-weight: 500;">Create an account</a>
+    </p>
+</div>
+
+<?php require '../includes/footer.php'; ?>
